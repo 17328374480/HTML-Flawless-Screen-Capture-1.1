@@ -1,0 +1,930 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全编码分段录制 · 安全版 | 2小时自动分片防损坏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+        body {
+            background: #0a0e17;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 16px;
+        }
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: #121a29;
+            border-radius: 64px;
+            border: 1px solid #2f4880;
+            padding: 32px 40px;
+            box-shadow: 0 30px 60px #000000cc, 0 0 0 1px #4664b0 inset;
+            backdrop-filter: blur(4px);
+        }
+        h1 {
+            margin: 0 0 12px 0;
+            font-weight: 500;
+            font-size: 2.2rem;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .gradient-text {
+            background: linear-gradient(145deg, #e0ecff, #9bb9ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .encoding-badge {
+            background: #1b2944;
+            border: 1px solid #4c6ecf;
+            color: #c4dbff;
+            border-radius: 60px;
+            padding: 6px 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .grid-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 36px 0 28px;
+        }
+        .card {
+            background: #0f172b;
+            border-radius: 36px;
+            padding: 22px 20px;
+            border: 1px solid #2d4070;
+            box-shadow: 0 6px 0 #070b16;
+        }
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a5befa;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            margin-bottom: 22px;
+        }
+        .radio-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .radio-item {
+            background: #1e2842;
+            border-radius: 40px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            border: 1px solid #354d82;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+        .radio-item.selected {
+            background: #27417c;
+            border-color: #85a6ff;
+            box-shadow: 0 0 0 2px #5275e0;
+        }
+        .radio-item input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #6d8cdf;
+            border-radius: 50%;
+            margin: 0 16px 0 0;
+            background: #0f1b30;
+        }
+        .radio-item input[type="radio"]:checked {
+            background: #85acff;
+            border-color: #d1e1ff;
+            box-shadow: 0 0 10px #3f6eff;
+        }
+        .radio-item label {
+            flex: 1;
+            color: #eef4ff;
+            font-weight: 500;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .value-tag {
+            background: #1f3457;
+            border-radius: 30px;
+            padding: 4px 18px;
+            color: #c2d6ff;
+            font-family: monospace;
+        }
+
+        .codec-selector {
+            margin-top: 10px;
+        }
+        .select-wrapper {
+            background: #1b2746;
+            border-radius: 48px;
+            padding: 6px 18px 6px 28px;
+            border: 2px solid #3f5b9e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .select-wrapper select {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #eaf2ff;
+            font-size: 1.3rem;
+            font-weight: 500;
+            padding: 16px 0;
+            outline: none;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .select-wrapper select option {
+            background: #1e2b4a;
+            color: #fff;
+            padding: 10px;
+        }
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .chip {
+            background: #233156;
+            border: 1px solid #5572c0;
+            color: #bdd2ff;
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+        }
+
+        .slider-block {
+            margin-top: 25px;
+        }
+        .slider-block input {
+            width: 100%;
+        }
+
+        /* 音频面板 */
+        .audio-panel {
+            background: #0f172b;
+            border-radius: 48px;
+            padding: 20px 32px;
+            border: 1px solid #2d4070;
+            margin: 20px 0 28px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            box-shadow: 0 6px 0 #070b16;
+        }
+        .audio-panel-left, .audio-panel-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .audio-label {
+            color: #a5befa;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .audio-select {
+            background: #1e2842;
+            border: 1px solid #4f6fc0;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+        }
+        .audio-select option {
+            background: #1b2746;
+        }
+        .gain-slider {
+            width: 200px;
+            background: #1e2842;
+            border-radius: 20px;
+            padding: 6px 6px;
+        }
+        .gain-value {
+            color: #c2d6ff;
+            min-width: 60px;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+        .audio-status {
+            color: #ffaa66;
+            font-size: 0.95rem;
+            background: #1e1e2a;
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid #4a5e8b;
+        }
+
+        .row-buttons {
+            display: flex;
+            gap: 24px;
+            margin: 24px 0 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1 1 220px;
+            background: #263157;
+            border: 1px solid #4f6fc0;
+            border-radius: 60px;
+            padding: 20px 30px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #d5e4ff;
+            box-shadow: 0 8px 0 #0f172d;
+            transition: 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .btn.start {
+            background: #1a7943;
+            border-color: #58e081;
+            color: white;
+            box-shadow: 0 8px 0 #0c4124;
+        }
+        .btn.stop {
+            background: #b13e4f;
+            border-color: #ff8a8a;
+            box-shadow: 0 8px 0 #602630;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 #0f172d;
+            pointer-events: none;
+        }
+        
+        /* 计时器布局优化 */
+        .timer-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .timer-box {
+            flex: 1;
+            min-width: 200px;
+            background: #0b1222;
+            border-radius: 100px;
+            padding: 20px 34px;
+            text-align: center;
+            border: 1px solid #4660a8;
+            color: #deecff;
+            letter-spacing: 6px;
+            box-shadow: inset 0 4px 12px black;
+        }
+        .timer-label {
+            display: block;
+            font-size: 0.9rem;
+            color: #6c83b9;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .timer-value {
+            font-size: 3.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .segment-indicator {
+            color: #58e081;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .footer-note {
+            display: flex;
+            justify-content: space-between;
+            color: #6c83b9;
+            border-top: 1px dashed #31486b;
+            padding-top: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .resolution-warning {
+            color: #ffaa66;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 8px;
+            background: #2a1e1e;
+            border-radius: 20px;
+            text-align: center;
+        }
+        
+        @media (max-width: 1200px) {
+            .grid-panel { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .grid-panel { grid-template-columns: 1fr; }
+            .timer-value { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>
+        <span class="gradient-text">⚡ 编码自由选 · 安全分段录制 · 防文件损坏</span>
+        <span class="encoding-badge">#VP9 #AV1 #VVC #Auto-Save #2H-Segment</span>
+    </h1>
+
+    <div class="grid-panel">
+        <!-- 分辨率卡 -->
+        <div class="card">
+            <div class="card-title">📐 分辨率 (理想值)</div>
+            <div class="radio-vertical" id="resGroup">
+                <div class="radio-item" data-width="3840" data-height="2160">
+                    <input type="radio" name="res" value="3840x2160" id="res4k" checked>
+                    <label for="res4k">4K UHD</label>
+                    <span class="value-tag">3840x2160</span>
+                </div>
+                <div class="radio-item" data-width="7680" data-height="4320">
+                    <input type="radio" name="res" value="7680x4320" id="res8k">
+                    <label for="res8k">8K</label>
+                    <span class="value-tag">7680x4320</span>
+                </div>
+                <div class="radio-item" data-width="1920" data-height="1080">
+                    <input type="radio" name="res" value="1920x1080" id="res1080">
+                    <label for="res1080">1080p</label>
+                    <span class="value-tag">1920x1080</span>
+                </div>
+                <div class="radio-item" data-width="2560" data-height="1440">
+                    <input type="radio" name="res" value="2560x1440" id="res2k">
+                    <label for="res2k">2K</label>
+                    <span class="value-tag">2560x1440</span>
+                </div>
+            </div>
+            <div class="resolution-warning" id="resWarning">
+                ⚠️ 实际分辨率取决于显示器支持
+            </div>
+        </div>
+
+        <!-- 帧率卡 -->
+        <div class="card">
+            <div class="card-title">⚡ 帧率 (FPS) · 支持高刷</div>
+            <div class="radio-vertical" id="fpsGroup">
+                <div class="radio-item">
+                    <input type="radio" name="fps" value="240" id="fps240">
+                    <label for="fps240">240 FPS</label>
+                    <span class="value-tag">极限高刷</span>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="fps" value="144" id="fps144">
+                    <label for="fps144">144 FPS</label>
+                    <span class="value-tag">电竞级</span>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="fps" value="60" id="fps60" checked>
+                    <label for="fps60">60 FPS</label>
+                    <span class="value-tag">流畅</span>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="fps" value="30" id="fps30">
+                    <label for="fps30">30 FPS</label>
+                    <span class="value-tag">兼容</span>
+                </div>
+            </div>
+            <div class="slider-block">
+                <div style="display:flex; justify-content:space-between; color:#b1c7ff;">比特率 <span id="bitrateDisplay">120 Mbps</span></div>
+                <input type="range" id="bitrateSlider" min="10" max="350" value="120" step="1">
+            </div>
+        </div>
+
+        <!-- 色彩采样卡 -->
+        <div class="card">
+            <div class="card-title">🎨 色彩采样</div>
+            <div class="radio-vertical" id="chromaGroup">
+                <div class="radio-item">
+                    <input type="radio" name="chroma" value="420" id="chroma420" checked>
+                    <label for="chroma420">4:2:0</label>
+                    <span class="value-tag">标准</span>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="chroma" value="422" id="chroma422">
+                    <label for="chroma422">4:2:2</label>
+                    <span class="value-tag">专业</span>
+                </div>
+                <div class="radio-item">
+                    <input type="radio" name="chroma" value="444" id="chroma444">
+                    <label for="chroma444">4:4:4</label>
+                    <span class="value-tag">无损色度</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编码器卡 -->
+        <div class="card">
+            <div class="card-title">🔩 强制选择编码</div>
+            <div class="codec-selector">
+                <div class="select-wrapper">
+                    <select id="codecSelect">
+                        <option value="vp9">VP9</option>
+                        <option value="h264">H.264 (AVC)</option>
+                        <option value="h265">H.265 (HEVC)</option>
+                        <option value="av1">AV1</option>
+                        <option value="vp8">VP8</option>
+                        <option value="mp4">MP4 (基本)</option>
+                    </select>
+                </div>
+                <div class="chip-container" id="selectedCodecChip"></div>
+                <div style="color:#98b0f0; font-size:0.9rem; margin-top:15px; padding-left:6px;">
+                    ⚙️ 自动分段：每2小时保存一次
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音频增强面板 -->
+    <div class="audio-panel">
+        <div class="audio-panel-left">
+            <span class="audio-label">🎧 音频增强</span>
+            <select id="audioEnhance" class="audio-select">
+                <option value="none">无增强</option>
+                <option value="bbe" selected>BBE 高清晰激励</option>
+            </select>
+        </div>
+        <div class="audio-panel-right">
+            <span class="audio-label">🔊 增益</span>
+            <input type="range" id="gainSlider" class="gain-slider" min="-10" max="20" value="3" step="1">
+            <span id="gainValue" class="gain-value">+3 dB</span>
+        </div>
+        <div id="audioStatus" class="audio-status">⚙️ 准备就绪 · 内置硬限制器防削波</div>
+    </div>
+
+    <!-- 按钮组 -->
+    <div class="row-buttons">
+        <button class="btn start" id="startBtn">▶ 开始录制 (2小时自动分段)</button>
+        <button class="btn stop" id="stopBtn" disabled>⏹ 完全停止</button>
+    </div>
+
+    <!-- 计时器面板 -->
+    <div class="timer-container">
+        <div class="timer-box">
+            <span class="timer-label">当前分段时长</span>
+            <div class="timer-value" id="timerDisplay">00:00:00</div>
+        </div>
+        <div class="timer-box">
+            <span class="timer-label">录制状态</span>
+            <div class="timer-value segment-indicator" id="segmentDisplay">Part 1</div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        <span>📁 自动保存至桌面: 编码_分辨率_PartN_时间.mp4</span>
+        <span>🛡️ 安全机制：单文件损坏不影响其他分段</span>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ==================== DOM 元素 ====================
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const timerDiv = document.getElementById('timerDisplay');
+    const segmentDiv = document.getElementById('segmentDisplay');
+    const bitrateSlider = document.getElementById('bitrateSlider');
+    const bitrateDisplay = document.getElementById('bitrateDisplay');
+    const codecSelect = document.getElementById('codecSelect');
+    const chipContainer = document.getElementById('selectedCodecChip');
+    const resWarning = document.getElementById('resWarning');
+
+    const resRadios = document.querySelectorAll('input[name="res"]');
+    const fpsRadios = document.querySelectorAll('input[name="fps"]');
+    const chromaRadios = document.querySelectorAll('input[name="chroma"]');
+
+    const audioEnhanceSelect = document.getElementById('audioEnhance');
+    const gainSlider = document.getElementById('gainSlider');
+    const gainSpan = document.getElementById('gainValue');
+    const audioStatusDiv = document.getElementById('audioStatus');
+
+    // ==================== 配置常量 ====================
+    const SEGMENT_DURATION_MS = 2 * 60 * 60 * 1000; // 2小时 (毫秒)
+    const TIMESLICE_INTERVAL = 1000; // 每秒触发一次数据缓存，防止内存溢出
+
+    // ==================== 状态变量 ====================
+    let rawStream = null;
+    let audioContext = null;
+    let processedStreamForRecord = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    
+    let startTime = null;
+    let timerInterval = null;
+    let recordingActive = false;
+    
+    let segmentIndex = 1; // 当前分段索引
+    let segmentStartTime = null; // 当前分段开始时间
+    let autoStopTimeout = null; // 自动分段定时器
+
+    // ==================== 初始化与UI更新 ====================
+    gainSlider.addEventListener('input', () => {
+        let val = gainSlider.value;
+        gainSpan.innerText = (val > 0 ? '+' : '') + val + ' dB';
+        audioStatusDiv.innerHTML = val > 12 ? '⚠️ 增益过高' : '🎧 BBE+限制器 已优化';
+    });
+
+    function updateCodecChip() {
+        const selected = codecSelect.options[codecSelect.selectedIndex].text;
+        chipContainer.innerHTML = `<span class="chip" style="background:#2f4780; border-color:#98b4ff;">🔷 ${selected}</span>`;
+    }
+    codecSelect.addEventListener('change', updateCodecChip);
+    updateCodecChip();
+
+    bitrateSlider.addEventListener('input', (e) => {
+        bitrateDisplay.innerText = e.target.value + ' Mbps';
+    });
+
+    // ==================== 辅助函数 ====================
+    function getSelectedResolution() {
+        for (let r of resRadios) if (r.checked) {
+            const [w, h] = r.value.split('x').map(Number);
+            return { width: w, height: h };
+        }
+        return { width: 3840, height: 2160 };
+    }
+    
+    function getSelectedFPS() {
+        for (let f of fpsRadios) if (f.checked) return parseInt(f.value, 10);
+        return 60;
+    }
+    
+    function getSelectedChroma() {
+        for (let c of chromaRadios) if (c.checked) return c.value;
+        return '420';
+    }
+    
+    function getSelectedBitrateMbps() {
+        return parseInt(bitrateSlider.value, 10);
+    }
+    
+    function getSelectedCodecKey() {
+        return codecSelect.value;
+    }
+
+    function buildMimeFromSelection() {
+        const codecKey = getSelectedCodecKey();
+        const chroma = getSelectedChroma();
+        let baseMime = 'video/mp4';
+        let codecPart = '';
+
+        switch (codecKey) {
+            case 'vp9': baseMime = 'video/webm'; codecPart = 'vp9'; break;
+            case 'vp8': baseMime = 'video/webm'; codecPart = 'vp8'; break;
+            case 'h264': baseMime = 'video/mp4'; codecPart = 'avc1.640034'; break;
+            case 'av1':
+                baseMime = 'video/mp4';
+                if (chroma === '444') codecPart = 'av01.0.15M.08.0.110.01.01.01.0';
+                else if (chroma === '422') codecPart = 'av01.0.15M.08.0.110.01.01.00.0';
+                else codecPart = 'av01.0.15M.08';
+                break;
+            case 'h265': baseMime = 'video/mp4'; codecPart = 'hev1.1.6.L153.B0'; break;
+            default: baseMime = 'video/mp4';
+        }
+        if (codecPart) return `${baseMime}; codecs="${codecPart}"`;
+        return baseMime;
+    }
+
+    function getSupportedMimeOrFallback() {
+        const desired = buildMimeFromSelection();
+        if (MediaRecorder.isTypeSupported(desired)) return desired;
+        
+        const base = desired.split(';')[0];
+        if (MediaRecorder.isTypeSupported(base)) {
+            alert(`编码降级提示：当前浏览器不支持所选编码参数，已切换为基础容器`);
+            return base;
+        }
+        return 'video/webm'; // 最终回退
+    }
+
+    // ==================== 获取屏幕流 ====================
+    async function getCustomStream() {
+        const { width, height } = getSelectedResolution();
+        const fps = getSelectedFPS();
+        
+        const constraints = {
+            video: { width: { ideal: width }, height: { ideal: height }, frameRate: { ideal: fps, max: fps } },
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+        };
+
+        try {
+            const displayStream = await navigator.mediaDevices.getDisplayMedia(constraints);
+            const track = displayStream.getVideoTracks()[0];
+            const settings = track.getSettings();
+            
+            // 更新UI提示实际分辨率
+            resWarning.innerHTML = `✅ 实际: ${settings.width}x${settings.height} @ ${settings.frameRate}FPS`;
+            resWarning.style.color = '#66ff99';
+            
+            return displayStream;
+        } catch (err) {
+            alert('获取屏幕失败: ' + err.message);
+            throw err;
+        }
+    }
+
+    // ==================== 计时器逻辑 ====================
+    function formatTime(ms) {
+        let totalSeconds = Math.floor(ms / 1000);
+        let h = Math.floor(totalSeconds / 3600);
+        let m = Math.floor((totalSeconds % 3600) / 60);
+        let s = totalSeconds % 60;
+        return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }
+    
+    function startTimer() {
+        segmentStartTime = Date.now();
+        timerInterval = setInterval(() => {
+            const elapsed = Date.now() - segmentStartTime;
+            timerDiv.innerText = formatTime(elapsed);
+        }, 1000);
+    }
+    
+    function resetTimerUI() {
+        if(timerInterval) clearInterval(timerInterval);
+        timerDiv.innerText = "00:00:00";
+    }
+
+    // ==================== 录制核心：分段保存逻辑 ====================
+    
+    // 触发下载并保存当前段
+    function saveSegment() {
+        if (recordedChunks.length === 0) return;
+
+        const mime = mediaRecorder ? mediaRecorder.mimeType : 'video/mp4';
+        const blob = new Blob(recordedChunks, { type: mime });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // 动态生成文件名
+        const { width, height } = getSelectedResolution();
+        const fps = getSelectedFPS();
+        const bitrate = getSelectedBitrateMbps();
+        const codecName = codecSelect.options[codecSelect.selectedIndex].text.replace(/[ .()]/g, '');
+        const enhanceTag = audioEnhanceSelect.value === 'bbe' ? '_BBE' : '';
+        const now = new Date();
+        const ts = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}_${now.getHours()}-${now.getMinutes()}`;
+        
+        // 关键：文件名包含PartX
+        a.download = `${codecName}_${width}x${height}_Part${segmentIndex}_${ts}${enhanceTag}.mp4`;
+        
+        document.body.appendChild(a); // Firefox 需要
+        a.click();
+        document.body.removeChild(a);
+        
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        
+        // 清空缓存，准备下一段
+        recordedChunks = [];
+        console.log(`✅ 分段 ${segmentIndex} 已保存`);
+    }
+
+    // 切换到下一个分段
+    function switchToNextSegment() {
+        // 1. 停止当前录制器，触发onstop -> saveSegment
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop(); 
+        }
+        
+        // 2. 索引递增
+        segmentIndex++;
+        segmentDiv.innerText = `Part ${segmentIndex}`;
+        console.log(`🔄 切换至分段 ${segmentIndex}`);
+        
+        // 3. 立即启动新的录制器 (在onstop回调中执行，确保安全)
+    }
+
+    // 录制停止回调 (无论是手动停止还是自动分段)
+    function onRecorderStop() {
+        saveSegment();
+        
+        // 如果录制仍在激活状态，说明是自动分段触发的，需要立即启动下一段
+        if (recordingActive) {
+            startNewRecorderInstance();
+        } else {
+            // 彻底停止
+            cleanupAll();
+        }
+    }
+
+    // 创建新的录制器实例
+    function startNewRecorderInstance() {
+        if (!processedStreamForRecord) {
+            console.error('流已断开，无法开始新分段');
+            stopAll();
+            return;
+        }
+
+        const mimeType = getSupportedMimeOrFallback();
+        const bitrateBps = getSelectedBitrateMbps() * 1_000_000;
+        
+        const options = { 
+            mimeType: mimeType, 
+            videoBitsPerSecond: bitrateBps 
+        };
+
+        try {
+            mediaRecorder = new MediaRecorder(processedStreamForRecord, options);
+        } catch (e) {
+            alert('创建录制器失败: ' + e.message);
+            stopAll();
+            return;
+        }
+
+        mediaRecorder.ondataavailable = (e) => {
+            if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+        
+        mediaRecorder.onstop = onRecorderStop;
+        
+        mediaRecorder.onerror = (e) => {
+            console.error('录制错误:', e);
+            // 遇到错误尝试保存当前数据并停止
+            recordingActive = false; 
+            mediaRecorder.stop();
+        };
+
+        // 关键：启动录制，并设置timeslice，防止内存堆积
+        mediaRecorder.start(TIMESLICE_INTERVAL);
+        
+        // 重置计时器
+        resetTimerUI();
+        startTimer();
+
+        // 设置2小时后的自动分段触发器
+        clearTimeout(autoStopTimeout);
+        autoStopTimeout = setTimeout(() => {
+            if (recordingActive) switchToNextSegment();
+        }, SEGMENT_DURATION_MS);
+    }
+
+    // ==================== 彻底停止与清理 ====================
+    function stopAll() {
+        recordingActive = false;
+        clearTimeout(autoStopTimeout);
+        
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop(); // 这会触发 onRecorderStop -> saveSegment
+        } else {
+            cleanupAll();
+        }
+        
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        segmentDiv.innerText = '已停止';
+    }
+
+    function cleanupAll() {
+        if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close();
+        }
+        if (rawStream) {
+            rawStream.getTracks().forEach(t => t.stop());
+        }
+        rawStream = null;
+        audioContext = null;
+        processedStreamForRecord = null;
+        resetTimerUI();
+    }
+
+    // ==================== 开始录制入口 ====================
+    async function startRecording() {
+        try {
+            // 重置状态
+            segmentIndex = 1;
+            segmentDiv.innerText = `Part 1`;
+            recordedChunks = [];
+            recordingActive = true;
+
+            // 1. 获取流
+            rawStream = await getCustomStream();
+            
+            // 2. 音频处理
+            const audioTracks = rawStream.getAudioTracks();
+            if (audioTracks.length === 0) {
+                audioStatusDiv.innerHTML = '🔇 无音频';
+            } else {
+                // BBE处理逻辑 (简化版，保持逻辑一致)
+                if (audioEnhanceSelect.value === 'bbe') {
+                    try {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+                        const source = audioContext.createMediaStreamSource(new MediaStream([audioTracks[0]]));
+                        
+                        // 增益与限制器
+                        const gainNode = audioContext.createGain();
+                        gainNode.gain.value = Math.pow(10, parseFloat(gainSlider.value) / 20);
+                        
+                        const limiter = audioContext.createDynamicsCompressor();
+                        limiter.threshold.value = -2;
+                        limiter.knee.value = 0;
+                        limiter.ratio.value = 20;
+                        limiter.attack.value = 0.001;
+                        limiter.release.value = 0.01;
+
+                        // BBE滤波器
+                        const lowComp = audioContext.createBiquadFilter();
+                        lowComp.type = 'peaking';
+                        lowComp.frequency.value = 80;
+                        lowComp.Q.value = 1.5;
+                        lowComp.gain.value = 2;
+
+                        const highExciter = audioContext.createBiquadFilter();
+                        highExciter.type = 'highshelf';
+                        highExciter.frequency.value = 5000;
+                        highExciter.gain.value = 4;
+
+                        source.connect(lowComp);
+                        lowComp.connect(highExciter);
+                        highExciter.connect(gainNode);
+                        gainNode.connect(limiter);
+                        
+                        const dest = audioContext.createMediaStreamDestination();
+                        limiter.connect(dest);
+                        
+                        // 合并视频轨和处理后的音频轨
+                        processedStreamForRecord = new MediaStream([
+                            rawStream.getVideoTracks()[0],
+                            dest.stream.getAudioTracks()[0]
+                        ]);
+                        audioStatusDiv.innerHTML = '🎧 BBE处理中';
+
+                    } catch(e) {
+                        console.warn("音频处理失败，使用原始流", e);
+                        processedStreamForRecord = rawStream;
+                    }
+                } else {
+                    processedStreamForRecord = rawStream;
+                }
+            }
+
+            // 3. 启动第一个分段
+            startNewRecorderInstance();
+
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+
+            // 监听用户手动停止共享
+            rawStream.getVideoTracks()[0].onended = () => {
+                if (recordingActive) stopAll();
+            };
+
+        } catch (err) {
+            console.error('启动录制失败:', err);
+            cleanupAll();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+        }
+    }
+
+    // 事件绑定
+    startBtn.addEventListener('click', startRecording);
+    stopBtn.addEventListener('click', stopAll);
+
+    // 美化radio
+    document.querySelectorAll('.radio-item').forEach(item => {
+        const radio = item.querySelector('input[type="radio"]');
+        if (radio && radio.checked) item.classList.add('selected');
+        radio?.addEventListener('change', function(e) {
+            document.querySelectorAll(`input[name="${this.name}"]`).forEach(r => {
+                r.closest('.radio-item').classList.remove('selected');
+            });
+            if (this.checked) this.closest('.radio-item').classList.add('selected');
+        });
+    });
+
+    // 页面关闭时尝试保存
+    window.addEventListener('beforeunload', (e) => {
+        if (recordingActive) {
+            e.preventDefault();
+            e.returnValue = '';
+            stopAll();
+        }
+    });
+})();
+</script>
+</body>
+</html>
